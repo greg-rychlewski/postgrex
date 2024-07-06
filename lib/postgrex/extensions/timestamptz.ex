@@ -8,7 +8,7 @@ defmodule Postgrex.Extensions.TimestampTZ do
   @gs_unix_epoch NaiveDateTime.to_gregorian_seconds(~N[1970-01-01 00:00:00.0]) |> elem(0)
   @us_epoch (@gs_epoch - @gs_unix_epoch) * 1_000_000
 
-  @gs_max elem(NaiveDateTime.to_gregorian_seconds(~N[9999-01-01 00:00:00.0]), 0) - @gs_unix_epoch
+  @gs_max elem(NaiveDateTime.to_gregorian_seconds(~N[294276-12-31 23:59:59.9]), 0) - @gs_unix_epoch
   @us_max @gs_max * 1_000_000
 
   @gs_min elem(NaiveDateTime.to_gregorian_seconds(~N[-4713-01-01 00:00:00.0]), 0) - @gs_unix_epoch
@@ -45,7 +45,7 @@ defmodule Postgrex.Extensions.TimestampTZ do
         <<8::int32(), microsecs - @us_epoch::int64()>>
 
       _ ->
-        raise ArgumentError, "#{inspect(datetime)} is not in the year range -4713..9999"
+        raise ArgumentError, "#{inspect(datetime)} is not in the year range -4713..294276"
     end
   end
 
