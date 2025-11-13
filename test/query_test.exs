@@ -2062,7 +2062,7 @@ defmodule QueryTest do
     # Dropping socket in middle of transaction should return error
     fun = fn conn ->
       disconnect(conn)
-      P.execute(pid, query, [])
+      P.execute(conn, query, [])
     end
 
     assert {:error, :rollback} = P.transaction(pid, fun)
