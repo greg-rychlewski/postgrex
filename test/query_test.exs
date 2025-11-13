@@ -1984,9 +1984,9 @@ defmodule QueryTest do
     {:ok, pid} = P.start_link(opts)
 
     # Dropping socket in middle of transaction should return error
-    fun = fn ->
+    fun = fn conn ->
       disconnect(pid)
-      P.prepare(pid, "42", "SELECT 42")
+      P.prepare(conn, "42", "SELECT 42")
     end
 
     assert {:ok, _} = P.transaction(pid, fun)
