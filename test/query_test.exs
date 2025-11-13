@@ -1989,10 +1989,10 @@ defmodule QueryTest do
       P.prepare(conn, "42", "SELECT 42")
     end
 
-    assert {:ok, _} = P.transaction(pid, fun)
+    assert {:error, :rollback} = P.transaction(pid, fun)
   end
 
-  test "disconnect_and_retry with transaction" do
+  test "disconnect_and_retry with begin transaction" do
     # Start new connection so we can retry on disconnect
     opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]
     {:ok, pid} = P.start_link(opts)
@@ -2019,7 +2019,24 @@ defmodule QueryTest do
     assert :ok = P.close(pid, query)
   end
 
-  test "disconnect_and_retry on attempting execution of prepared statement" do
+  test "disconnect_and_retry with closing prepared statement in transaction" do
+    # Start new connection so we can retry on disconnect
+    opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]
+    {:ok, pid} = P.start_link(opts)
+
+    # Prepare query that we wil try to close after disconnecting
+    {:ok, query} = P.prepare(pid, "42", "SELECT 42")
+
+    # Dropping socket in middle of transaction should return error
+    fun = fn conn ->
+      disconnect(conn)
+      P.close(conn, query)
+    end
+
+    assert {:error, :rollback} = P.transaction(pid, fun)
+  end
+
+  test "disconnect_and_retry with binding prepared statement" do
     # Start new connection so we can retry on disconnect
     opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]
     {:ok, pid} = P.start_link(opts)
@@ -2032,6 +2049,23 @@ defmodule QueryTest do
 
     # Assert execute happens instead of returning error
     assert {:ok, _, _} = P.execute(pid, query, [])
+  end
+
+  test "disconnect_and_retry with binding prepared statement in transaction" do
+    # Start new connection so we can retry on disconnect
+    opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]
+    {:ok, pid} = P.start_link(opts)
+
+    # Prepare query that we wil try to execute after disconnecting
+    {:ok, query} = P.prepare(pid, "42", "SELECT 42")
+
+    # Dropping socket in middle of transaction should return error
+    fun = fn conn ->
+      disconnect(conn)
+      P.execute(pid, query, [])
+    end
+
+    assert {:error, :rollback} = P.transaction(pid, fun)
   end
 
   defp disconnect(%DBConnection{} = conn) do
