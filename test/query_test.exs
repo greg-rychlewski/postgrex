@@ -1978,6 +1978,20 @@ defmodule QueryTest do
     assert {:ok, _} = P.prepare(pid, "42", "SELECT 42")
   end
 
+  test "disconnect_and_retry with prepare in transaction" do
+    # Start new connection so we can retry on disconnect
+    opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]
+    {:ok, pid} = P.start_link(opts)
+
+    # Dropping socket in middle of transaction should return error
+    fun = fn ->
+      disconnect(pid)
+      P.prepare(pid, "42", "SELECT 42")
+    end
+
+    assert {:ok, _} = P.transaction(pid, fun)
+  end
+
   test "disconnect_and_retry with transaction" do
     # Start new connection so we can retry on disconnect
     opts = [database: "postgrex_test", backoff_min: 1, backoff_max: 1]

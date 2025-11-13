@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - disconnect_and_retry_test
   pull_request:
 
 jobs:
