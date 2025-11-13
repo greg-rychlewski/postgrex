@@ -1984,9 +1984,9 @@ defmodule QueryTest do
     {:ok, pid} = P.start_link(opts)
 
     # Dropping socket in middle of transaction should return error
-    fun = fn _conn ->
-      disconnect(pid)
-      P.prepare(pid, "42", "SELECT 42")
+    fun = fn conn ->
+      disconnect(conn)
+      P.prepare(conn, "42", "SELECT 42")
     end
 
     assert {:ok, _} = P.transaction(pid, fun)
@@ -2032,6 +2032,11 @@ defmodule QueryTest do
 
     # Assert execute happens instead of returning error
     assert {:ok, _, _} = P.execute(pid, query, [])
+  end
+
+  defp disconnect(%DBConnection{} = conn) do
+    sock = get_socket(conn)
+    :gen_tcp.shutdown(sock, :read_write)
   end
 
   defp disconnect(pid) do
