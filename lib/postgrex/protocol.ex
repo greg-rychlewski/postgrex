@@ -2872,7 +2872,7 @@ defmodule Postgrex.Protocol do
       {:ok, %Postgrex.Result{command: :close, connection_id: connection_id}, s}
     else
       {:disconnect, _err, s} = disconnect ->
-        retry_disconnet(disconnect, s.postgres)
+        retry_disconnect(disconnect, s.postgres)
     end
   end
 
