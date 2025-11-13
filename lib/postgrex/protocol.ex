@@ -2091,7 +2091,7 @@ defmodule Postgrex.Protocol do
         bind_execute(s, status, query, params)
 
       {error, _, _} = other when error in [:error, :disconnect] ->
-        handle_disconnect_retry(other)
+        other
     end
   end
 
