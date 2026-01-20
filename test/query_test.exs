@@ -4,7 +4,10 @@ defmodule QueryTest do
   import ExUnit.CaptureLog
   alias Postgrex, as: P
 
-  Postgrex.Types.define(Postgrex.ElixirDurationTypes, [], interval_decode_type: Duration)
+  Postgrex.Types.define(Postgrex.ElixirDurationTypes, [],
+    interval_decode_type: Duration,
+    allow_infinite_intervals: true
+  )
 
   setup context do
     opts = [
@@ -139,6 +142,29 @@ defmodule QueryTest do
 
     assert [[%Postgrex.Interval{months: 0, days: 0, secs: 10, microsecs: 240_000}]] =
              query("SELECT interval '10240000 microseconds'", [])
+  end
+
+  @tag min_pg_version: "17.0"
+  test "decode infinite interval" do
+    opts = [database: "postgrex_test", backoff_type: :stop, types: Postgrex.ElixirDurationTypes]
+    {:ok, pid} = P.start_link(opts)
+
+    assert P.query!(pid, "SELECT 'infinity'::interval", []).rows == [[:inf]]
+    assert P.query!(pid, "SELECT '-infinity'::interval", []).rows == [[:"-inf"]]
+  end
+
+  @tag min_pg_version: "17.0"
+  test "decode infinite interval raise when option not specified" do
+    opts = [database: "postgrex_test", backoff_type: :stop]
+    {:ok, pid} = P.start_link(opts)
+
+    assert_raise ArgumentError, ~r/got "infinity" from PostgreSQL/, fn ->
+      P.query(pid, "SELECT 'infinity'::interval", [])
+    end
+
+    assert_raise ArgumentError, ~r/got "-infinity" from PostgreSQL/, fn ->
+      P.query(pid, "SELECT '-infinity'::interval", [])
+    end
   end
 
   if Version.match?(System.version(), ">= 1.17.0") do
@@ -1007,6 +1033,29 @@ defmodule QueryTest do
              query("SELECT $1::interval", [
                %Postgrex.Interval{months: 14, days: 40, secs: 10920, microsecs: 1_024_000}
              ])
+  end
+
+  @tag min_pg_version: "17.0"
+  test "encode infinite interval" do
+    opts = [database: "postgrex_test", backoff_type: :stop, types: Postgrex.ElixirDurationTypes]
+    {:ok, pid} = P.start_link(opts)
+
+    assert P.query!(pid, "SELECT $1::interval", [:inf]).rows == [[:inf]]
+    assert P.query!(pid, "SELECT $1::interval", [:"-inf"]).rows == [[:"-inf"]]
+  end
+
+  @tag min_pg_version: "17.0"
+  test "encode infinite interval raise when option not specified" do
+    opts = [database: "postgrex_test", backoff_type: :stop]
+    {:ok, pid} = P.start_link(opts)
+
+    assert_raise ArgumentError, ~r/got query parameter value of `:inf`/, fn ->
+      P.query(pid, "SELECT $1::interval", [:inf])
+    end
+
+    assert_raise ArgumentError, ~r/got query parameter value of `:"-inf"`/, fn ->
+      P.query(pid, "SELECT $1::interval", [:"-inf"])
+    end
   end
 
   if Version.match?(System.version(), ">= 1.17.0") do
