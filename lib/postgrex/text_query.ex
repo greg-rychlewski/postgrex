@@ -24,7 +24,7 @@ defimpl DBConnection.Query, for: [Postgrex.TextQuery, Postgrex.TextQueries] do
   def decode(_query, result, _opts), do: result
 end
 
-defimpl String.Chars, for: [Postgrex.TextQuery, Postgrex.TextQuery] do
+defimpl String.Chars, for: [Postgrex.TextQuery, Postgrex.TextQueries] do
   def to_string(%{statement: statement}) do
     IO.iodata_to_binary(statement)
   end
