@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - text_query
   pull_request:
 
 jobs:
