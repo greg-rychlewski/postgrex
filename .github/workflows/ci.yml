@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - test_composite_array
   pull_request:
 
 jobs:

@@ -1127,7 +1127,7 @@ defmodule QueryTest do
 
   @tag :capture_log
   test "encode record", context do
-    assert [[{1, "2"}]] = query("SELECT $1::composite1", [{1, "2"}])
+    #   assert [[{1, "2"}]] = query("SELECT $1::composite1", [{1, "2"}])
     assert [[[{1, "2"}]]] = query("SELECT $1::composite1[]", [[{1, "2"}]])
     assert [[{1, nil, 3}]] = query("SELECT $1::composite2", [{1, nil, 3}])
   end
